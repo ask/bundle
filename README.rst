@@ -7,7 +7,7 @@ Manages installed Bundle packages
 Synopsis
 ========
 
-Description goes here.
+**Nothing here yet.**
 
 Documentation
 =============
@@ -15,6 +15,8 @@ Documentation
 Bundle is using Sphinx, and the latest documentation is available at Read The Docs:
 
     http://bundle.readthedocs.org/
+
+**Also not yet**
 
 Installation
 ============
@@ -38,11 +40,6 @@ by doing the following,::
 
 Getting Help
 ============
-
-Mailing list
-------------
-
-Join the TODO mailing list.
 
 Bug tracker
 ===========
