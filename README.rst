@@ -1,22 +1,37 @@
-=================================
-Manages installed Bundle packages
-=================================
+===================================
+ Create and manage bundle packages
+===================================
 
 :Version: 0.0.1
 
 Synopsis
 ========
 
-**Nothing here yet.**
+A bundle consists of several packages, and can be used as a shortcut in
+applications and libraries requirements lists.
 
-Documentation
-=============
+Bundles are used to follow a
+common group of packages, or a package with an optional extension feature.
 
-Bundle is using Sphinx, and the latest documentation is available at Read The Docs:
+This distribution lets you create bundles, and may also be able to manage
+installed bundles in the future.
 
-    http://bundle.readthedocs.org/
+Usage
+=====
 
-**Also not yet**
+You can create and upload a bundle to PyPI::
+
+    >>> b = Bundle("mybundle", description="Cool bundle",
+                  version="1.0.0",
+                  requires=["pkg1", "pkg2>1.3", "pkg3"],
+                  author="George Costanza",
+                  author_email="george@vandelay.com",
+                  url="http://vandelay.com",
+                  license="BSD")
+    >>> b.upload()
+
+Note that this requires a ``.pypirc`` containing your PyPI login information.
+
 
 Installation
 ============
