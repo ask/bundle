@@ -11,7 +11,7 @@ else:
 This is a bundle of several packages that you can use as a shortcut in the
 requirements lists of your applications.  Bundles are used to follow a
 common group of packages, or a package with an optional extension feature.
-"""
+'''
 
 setup(name='$name',
       version='$version',
@@ -22,7 +22,7 @@ setup(name='$name',
       platforms=$platforms,
       license='''$license''',
       zip_safe=False,
-      install_requires=$requires,
+      install_requires=$requires_i24,
       classifiers=[
           "Topic :: Software Development :: Libraries :: Python Modules",
       ],

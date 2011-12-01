@@ -9,7 +9,7 @@ Contents
 
 This bundle installs the following packages::
 
-    $requires
+    $requires_i2
 
 What is this?
 =============
@@ -34,6 +34,6 @@ in your pip requirements files::
 
     $name
 
-You can also specify a specific version:
+You can also specify a specific version::
 
     $name>=$version

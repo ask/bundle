@@ -6,5 +6,5 @@ include MANIFEST.in
 include README.rst
 include README
 include TODO
-recursive-include bundle *.py
+recursive-include bundle *.py *.t
 recursive-include requirements *.txt
