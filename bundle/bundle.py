@@ -172,7 +172,7 @@ class Bundle(object):
                     title=title,
                     title_h1='=' * len(title),
                     bundle_version=__version__,
-                    requires_i2=codewrap(repr(self.requires), i=4),
+                    requires_i2=codewrap(repr(self.requires), i=5),
                     requires_i24=codewrap(repr(self.requires), i=24))
     @property
     def setup_template(self):
