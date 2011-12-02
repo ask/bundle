@@ -61,5 +61,3 @@ class Version(list):
         if self._pypi is None:
             self._pypi = PyPI()
         return self._pypi
-
-

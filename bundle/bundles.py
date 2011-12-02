@@ -1,8 +1,6 @@
 from __future__ import absolute_import
 from __future__ import with_statement
 
-import os
-import string
 import sys
 
 from contextlib import contextmanager
@@ -111,7 +109,6 @@ class Bundle(object):
     def version_info(self):
         return Version(self.name, self.version)
 
-
     @property
     def stash(self):
         title = " - ".join([self.name, self.description])
@@ -121,6 +118,7 @@ class Bundle(object):
                     bundle_version=__version__,
                     requires_i2=codewrap(repr(self.requires), i=5),
                     requires_i24=codewrap(repr(self.requires), i=24))
+
     @property
     def setup_template(self):
         if self._setup_template is None:

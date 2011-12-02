@@ -2,7 +2,7 @@
  Create and manage bundle packages
 ===================================
 
-:Version: 1.1.0
+:Version: 1.1.1
 
 Synopsis
 ========
@@ -32,6 +32,74 @@ You can create and upload a bundle to PyPI::
 
 Note that this requires a ``.pypirc`` containing your PyPI login information.
 
+
+As a setuptools plugin
+----------------------
+
+If you use bundles for extension dependencies then you can use ``setup.py``
+to manage them.
+
+If you have a library called ``george``, with bundles defined in ``george.bundles``
+like this::
+
+    from bundle.extensions import Dist
+
+    # version must be a tuple of at least 2 elements,
+    # e.g. (1, 2), or (1, 2, 6).
+    from george import VERSION
+
+    defaults = {"author": "George Costanza",
+                "author_email": "art@vandelay.com",
+                "url": "http://vandelay.com",
+                "license": "BSD"}
+    george = Dist("george", VERSION, **defaults)
+
+    bundles = [
+        george.Bundle("george-with-django",
+                      "Bundle installing george and Django",
+                      requires=['django>=1.2']),
+        george.Bundle("george-in-production",
+                      "Bundle for george and deps suitable for production",
+                      requires=["celery", "psycopg2", "ultrajson"]),
+    ]
+
+
+With your bundles list you can now tell ``setup.py`` where to find it,
+by adding it to the ``bundle.bundles`` entrypoints.
+
+In george's ``setup.py`` add::
+
+    setup(
+        ...
+        entry_points = {
+            "bundle.bundles": ["george = george.bundles:bundles"]
+        },
+    )
+
+And then you can manage your bundles with the ``register_bundles``,
+``upload_bundles``, and ``upload_bundles_fix`` setup commands::
+
+    $ python setup.py upload_bundles
+
+Note that you need run ``setup.py develop`` or ``setup.py install``
+first, so that the entry points are properly installed before you
+run bundle commands.  And you need to have your PyPI credentials
+properly setup in your `~/.pypirc` file.
+
+The commands are:
+
+:upload_bundles:
+    Uploads bundles to PyPI, but only the bundles for which version
+    has not been uploaded before.
+
+:register_bundles:
+    Register the bundles at PyPI.  ``upload_bundles`` will also
+    register, but this is useful if you only need to change metadata
+    without uploading a new version.
+
+:upload_bundles_fix:
+    Bumps the last version number for all of the bundles
+    and uploads the bundles to PyPI.
 
 Installation
 ============

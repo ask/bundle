@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from __future__ import with_statement
 
 import os
 
@@ -14,4 +15,3 @@ def open(filename, mode='r'):
 def slurp(filename):
     with open(filename) as f:
         return f.read()
-

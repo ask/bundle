@@ -5,7 +5,6 @@ from distutils.command.upload import upload as _upload
 from pkg_resources import iter_entry_points
 
 
-
 class BundleCommand(_upload):
 
     user_options = _upload.user_options + [
@@ -73,4 +72,3 @@ class upload_bundles_fix(BundleCommand):
         log.info("* Uploading new bundle version for %s (%s)" % (
             bundle.name, bundle.version))
         bundle.upload_fix()
-
