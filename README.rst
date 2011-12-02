@@ -2,7 +2,7 @@
  Create and manage bundle packages
 ===================================
 
-:Version: 1.0.0
+:Version: 1.1.0
 
 Synopsis
 ========
