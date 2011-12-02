@@ -113,10 +113,11 @@ setup(
     zip_safe=False,
     test_suite="nose.collector",
     install_requires=[
+        "yolk",
     ],
     tests_require=tests_require,
     classifiers=[
-        "Development Status :: 5 - Production/Stable",
+        "Development Status :: 4 - Beta",
         "License :: OSI Approved :: BSD License",
         "Operating System :: OS Independent",
         "Programming Language :: Python",
@@ -126,7 +127,18 @@ setup(
         "Programming Language :: Python :: 2.5",
         "Programming Language :: Python :: 2",
         "Intended Audience :: Developers",
+        "Topic :: System :: Software Distribution",
+        "Topic :: System :: Installation/Setup",
         "Topic :: Software Development :: Libraries :: Python Modules",
+        "Framework :: Setuptools Plugin",
     ],
     long_description=long_description,
+
+    entry_points={
+        "distutils.commands": [
+            "register_bundles   = bundle.setup:register_bundles",
+            "upload_bundles     = bundle.setup:upload_bundles",
+            "upload_bundles_fix = bundle.setup:upload_bundles_fix",
+        ],
+    },
     **extra)

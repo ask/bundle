@@ -6,69 +6,14 @@ import string
 import sys
 
 from contextlib import contextmanager
-from shutil import rmtree
 from string import Template
 from subprocess import Popen, PIPE
-from tempfile import mkdtemp, NamedTemporaryFile
-from textwrap import TextWrapper
+from tempfile import NamedTemporaryFile
 
 from . import __version__
 from . import files
-
-
-def indent(s, n=4):
-    return "\n".join(' ' * n + line for line in s.split('\n'))
-
-
-def codewrap(s, w=50, i=4):
-    wrapper = TextWrapper(width=50, break_on_hyphens=False)
-    lines = wrapper.wrap(s)
-    return "\n".join([lines[0]] + [indent(l, i)
-                                    for l in lines[1:]])
-
-
-@contextmanager
-def changedir(new):
-    prev = os.getcwd()
-    os.chdir(new)
-    yield new
-    os.chdir(prev)
-
-
-def say(m):
-    sys.stderr.write("%s\n" % (m, ))
-
-
-class Version(list):
-    develindex = None
-
-    def __init__(self, value):
-        value, _, self.devel = value.partition('-')
-        list.__init__(self, map(int, value.split(".")))
-
-    def __str__(self):
-        return ".".join(map(str, self)) + self._develpart
-
-    def __repr__(self):
-        return str(self)
-
-    def bump(self):
-        if self.is_devel:
-            raise ValueError("Can't bump development versions")
-        if len(self) < 3:
-            self.append(0)
-        self[-1] += 1
-        return self
-
-    @property
-    def is_devel(self):
-        return bool(self.devel)
-
-    @property
-    def _develpart(self):
-        if self.devel:
-            return '-' + self.devel
-        return ''
+from .utils import changedir, codewrap, maybe_flag, maybe_opt, say, tempdir
+from .versions import Version
 
 
 class Bundle(object):
@@ -89,42 +34,54 @@ class Bundle(object):
         self._readme_template = readme_template
         self._pypi = None
 
-    def register(self):
-        self.sync_version_from_pypi()
-        self.run_setup_command("register")
+    def register(self, repository=None, show_response=None, strict=None, **_):
+        self.sync_with_released_version()
+        self.run_setup_command(
+                *self._register_cmd(repository, show_response, strict))
 
-    def upload(self):
-        self.run_setup_command("register", "sdist", "upload")
+    def _register_cmd(self, repository, show_response, strict):
+        return (["register"]
+              + maybe_opt("-r", repository)
+              + maybe_flag("--show-response", show_response)
+              + maybe_flag("--strict", strict))
 
-    def upload_fix(self):
-        self.bump_if_already_on_pypi()
-        self.upload()
+    def upload(self, repository=None, show_response=None, strict=None,
+            sign=None, identity=None, formats=None, **_):
+        self.run_setup_command(
+                *self._register_cmd(repository, show_response, strict)
+                +self._sdist_cmd(formats)
+                +self._upload_cmd(repository, show_response, sign, identity))
 
-    def sync_version_from_pypi(self):
-        version = Version(self.version)
-        prev = str(version)
-        while 1:
-            if not self._version_exists(version):
-                self.version = prev
-                return prev
-            prev = str(version)
-            version.bump()
+    def _upload_cmd(self, repository, show_response, sign, identity):
+        return (["upload"]
+              + maybe_opt("-r", repository)
+              + maybe_opt("-s", sign)
+              + maybe_opt("-i", identity)
+              + maybe_flag("--show_response", show_response))
 
-    def bump_if_already_on_pypi(self):
-        version = Version(self.version)
-        while 1:
-            if not self._version_exists(version):
-                break
-            version.bump()
-            print("Version taken: trying next version %r" % (version, ))
-        self.version = str(version)
-        return self.version
+    def _sdist_cmd(self, formats):
+        return ["sdist"] + maybe_opt("--formats=", formats)
 
-    def version_exists(self):
-        return self._version_exists(self.version)
+    def upload_fix(self, *args, **kwargs):
+        self.bump_if_already_released()
+        self.upload(*args, **kwargs)
 
-    def _version_exists(self, version):
-        return bool(self.pypi.release_urls(self.name, str(version)))
+    def run_setup_command(self, *argv):
+        with self.render_to_temp() as setup_name:
+            say(self._call([sys.executable, setup_name] + list(argv)))
+
+    def _call(self, argv):
+        say("$ %s" % ' '.join(argv))
+        return Popen(argv, stdout=PIPE).communicate()[0]
+
+    def sync_with_released_version(self):
+        self.version = self.version_info.sync_with_released_version()
+
+    def bump_if_already_released(self):
+        self.version = self.version_info.bump_if_released()
+
+    def version_released(self):
+        return self.version_info.is_released
 
     def render_setup(self):
         return Template(self.setup_template).substitute(**self.stash)
@@ -133,14 +90,8 @@ class Bundle(object):
         return Template(self.readme_template).substitute(**self.stash)
 
     @contextmanager
-    def temporary_dir(self):
-        dirname = mkdtemp()
-        yield dirname
-        rmtree(dirname)
-
-    @contextmanager
     def render_to_temp(self):
-        with self.temporary_dir() as dir:
+        with tempdir() as dir:
             with NamedTemporaryFile(dir=dir, suffix=".py") as setup:
                 with changedir(dir):
                     setup.write(self.render_setup())
@@ -148,11 +99,6 @@ class Bundle(object):
                     with open("README", "w") as readme:
                         readme.write(self.render_readme())
                     yield setup.name
-
-    def run_setup_command(self, *argv):
-        with self.render_to_temp() as setup_name:
-            say(Popen([sys.executable, setup_name] + list(argv),
-                       stdout=PIPE).communicate()[0])
 
     def upload_if_missing(self):
         if not self.version_exists():
@@ -162,8 +108,9 @@ class Bundle(object):
         return "<Bundle: %s v%s" % (self.name, self.version)
 
     @property
-    def upload_args(self):
-        return ["register", "sdist", "upload"]
+    def version_info(self):
+        return Version(self.name, self.version)
+
 
     @property
     def stash(self):
@@ -185,11 +132,3 @@ class Bundle(object):
         if self._readme_template is None:
             self._readme_template = files.slurp("README.t")
         return self._readme_template
-
-    @property
-    def pypi(self):
-        if self._pypi is None:
-            from yolk.pypi import CheeseShop
-            self._pypi = CheeseShop()
-        return self._pypi
-
