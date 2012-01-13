@@ -6,7 +6,6 @@ import sys
 from contextlib import contextmanager
 from string import Template
 from subprocess import Popen, PIPE
-from tempfile import NamedTemporaryFile
 
 from . import __version__
 from . import files
@@ -88,15 +87,16 @@ class Bundle(object):
         return Template(self.readme_template).substitute(**self.stash)
 
     @contextmanager
-    def render_to_temp(self):
+    def render_to_temp(self, setup_filename="setup.py",
+                             readme_filename="README"):
         with tempdir() as dir:
-            with NamedTemporaryFile(dir=dir, suffix=".py") as setup:
-                with changedir(dir):
+            with changedir(dir):
+                with open(setup_filename, "w") as setup:
                     setup.write(self.render_setup())
                     setup.flush()
-                    with open("README", "w") as readme:
+                    with open(readme_filename, "w") as readme:
                         readme.write(self.render_readme())
-                    yield setup.name
+                    yield setup_filename
 
     def upload_if_missing(self):
         if not self.version_exists():
